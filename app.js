@@ -70,12 +70,7 @@
 
     var sheet = document.createElement("div");
     sheet.className = "sheet";
-    sheet.innerHTML =
-      '<div class="look"><b>먼저 이렇게 보세요</b>' + esc(t.look) + "</div>" +
-      t.body.split("\n").map(function (p) {
-        return "<p>" + esc(p) + "</p>";
-      }).join("") +
-      '<div class="closing"><b>한 줄 정리</b>' + esc(t.closing) + "</div>";
+    sheet.innerHTML = renderSheet(t, i);
 
     li.appendChild(btn);
     li.appendChild(sheet);
@@ -86,6 +81,33 @@
     return String(s).replace(/[&<>]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c];
     });
+  }
+
+  /* 문단마다 재생 위치를 붙여 렌더한다. 누르면 그 지점부터 재생된다. */
+  function renderSheet(t, i) {
+    var html = '<div class="tap-hint">문단을 누르면 그 부분부터 재생됩니다</div>';
+    var paras = t.paras && t.paras.length ? t.paras : null;
+
+    if (!paras) {
+      return html +
+        '<div class="look"><b>먼저 이렇게 보세요</b>' + esc(t.look) + "</div>" +
+        '<div class="closing"><b>한 줄 정리</b>' + esc(t.closing) + "</div>";
+    }
+
+    paras.forEach(function (p, pi) {
+      var attrs = ' class="seg%C" data-i="' + i + '" data-p="' + pi +
+                  '" data-t="' + p.t + '"';
+      if (p.kind === "look") {
+        html += "<div" + attrs.replace("%C", " look") + ">" +
+                "<b>먼저 이렇게 보세요</b>" + esc(t.look) + "</div>";
+      } else if (p.kind === "closing") {
+        html += "<div" + attrs.replace("%C", " closing") + ">" +
+                "<b>한 줄 정리</b>" + esc(p.text) + "</div>";
+      } else {
+        html += "<p" + attrs.replace("%C", "") + ">" + esc(p.text) + "</p>";
+      }
+    });
+    return html;
   }
 
   var lis = listEl.querySelectorAll("li");
@@ -153,6 +175,31 @@
     return -1;
   }
 
+  /* 문단 클릭 → 그 지점으로 이동 */
+  listEl.addEventListener("click", function (e) {
+    var seg = e.target.closest ? e.target.closest(".seg") : null;
+    if (!seg) return;
+    var i = parseInt(seg.dataset.i, 10);
+    var at = parseFloat(seg.dataset.t) || 0;
+    if (!TRACKS[i].ready) return;
+    if (i !== cur) { play(i, at); return; }
+    try { audio.currentTime = at; } catch (err) {}
+    if (audio.paused) audio.play().catch(function () {});
+    markSegment(at);
+  });
+
+  function markSegment(time) {
+    if (cur < 0) return;
+    var segs = lis[cur].querySelectorAll(".seg");
+    var best = -1;
+    for (var k = 0; k < segs.length; k++) {
+      if (parseFloat(segs[k].dataset.t) <= time + 0.15) best = k;
+    }
+    for (var m = 0; m < segs.length; m++) {
+      segs[m].classList.toggle("cur", m === best);
+    }
+  }
+
   playBtn.addEventListener("click", function () {
     if (cur < 0) { var f = firstReady(); if (f >= 0) play(f); return; }
     if (audio.paused) audio.play().catch(function () {});
@@ -170,6 +217,10 @@
   });
   $("#back15").addEventListener("click", function () {
     audio.currentTime = Math.max(0, audio.currentTime - 15);
+  });
+  $("#fwd15").addEventListener("click", function () {
+    var end = isFinite(audio.duration) ? audio.duration : audio.currentTime + 15;
+    audio.currentTime = Math.min(end, audio.currentTime + 15);
   });
 
   /* ── 배속 ── */
@@ -191,8 +242,13 @@
   /* ── 오디오 이벤트 ── */
   audio.addEventListener("play", function () { playIcon.setAttribute("d", ICON_PAUSE); });
   audio.addEventListener("pause", function () { playIcon.setAttribute("d", ICON_PLAY); save(); });
+  var lastMark = -1;
   audio.addEventListener("timeupdate", function () {
     if (!seeking) { seek.value = audio.currentTime; tCur.textContent = fmt(audio.currentTime); }
+    if (Math.abs(audio.currentTime - lastMark) > 0.5) {
+      lastMark = audio.currentTime;
+      markSegment(audio.currentTime);
+    }
   });
   audio.addEventListener("loadedmetadata", function () {
     if (isFinite(audio.duration)) { seek.max = audio.duration; tDur.textContent = fmt(audio.duration); }
@@ -210,6 +266,7 @@
   seek.addEventListener("change", function () {
     seeking = false;
     try { audio.currentTime = parseFloat(seek.value); } catch (e) {}
+    markSegment(parseFloat(seek.value));
   });
 
   window.addEventListener("pagehide", save);
