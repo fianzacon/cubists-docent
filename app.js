@@ -8,7 +8,9 @@
   audio.preload = "metadata";
 
   var cur = -1;
+  var curSeg = -1;
   var rate = 1;
+  var follow = true;      // 읽는 문단만 밝게 하고 따라 스크롤
   var doneSet = {};
 
   /* ── 저장/복원 (실패해도 동작해야 한다) ── */
@@ -17,12 +19,14 @@
       var s = JSON.parse(localStorage.getItem(KEY) || "{}");
       rate = s.rate || 1;
       doneSet = s.done || {};
+      if (typeof s.follow === "boolean") follow = s.follow;
       return s;
     } catch (e) { return {}; }
   }
   function save(extra) {
     try {
-      var s = { rate: rate, done: doneSet, id: cur >= 0 ? TRACKS[cur].id : null,
+      var s = { rate: rate, done: doneSet, follow: follow,
+                id: cur >= 0 ? TRACKS[cur].id : null,
                 at: audio.currentTime || 0 };
       if (extra) for (var k in extra) s[k] = extra[k];
       localStorage.setItem(KEY, JSON.stringify(s));
@@ -85,7 +89,10 @@
 
   /* 문단마다 재생 위치를 붙여 렌더한다. 누르면 그 지점부터 재생된다. */
   function renderSheet(t, i) {
-    var html = '<div class="tap-hint">문단을 누르면 그 부분부터 재생됩니다</div>';
+    var html =
+      '<div class="followbar">' +
+      '<button type="button" class="followtoggle" data-i="' + i + '">따라가기</button>' +
+      "<span>문단을 누르면 그 부분부터 재생됩니다</span></div>";
     var paras = t.paras && t.paras.length ? t.paras : null;
 
     if (!paras) {
@@ -144,6 +151,8 @@
     document.body.classList.add("playing-open");
     openSheet(i);
     paint();
+    curSeg = -1;
+    markSegment(at || 0);
     setMediaSession(i);
   }
 
@@ -175,9 +184,19 @@
     return -1;
   }
 
-  /* 문단 클릭 → 그 지점으로 이동 */
+  /* 문단 클릭 → 그 지점으로 이동 / 따라가기 토글 */
   listEl.addEventListener("click", function (e) {
-    var seg = e.target.closest ? e.target.closest(".seg") : null;
+    var tgt = e.target;
+
+    var tog = tgt.closest ? tgt.closest(".followtoggle") : null;
+    if (tog) {
+      follow = !follow;
+      applyFollow();
+      save();
+      return;
+    }
+
+    var seg = tgt.closest ? tgt.closest(".seg") : null;
     if (!seg) return;
     var i = parseInt(seg.dataset.i, 10);
     var at = parseFloat(seg.dataset.t) || 0;
@@ -185,18 +204,39 @@
     if (i !== cur) { play(i, at); return; }
     try { audio.currentTime = at; } catch (err) {}
     if (audio.paused) audio.play().catch(function () {});
+    curSeg = -1;
     markSegment(at);
   });
 
+  function applyFollow() {
+    var bars = listEl.querySelectorAll(".followtoggle");
+    for (var i = 0; i < bars.length; i++) bars[i].classList.toggle("on", follow);
+    var sheets = listEl.querySelectorAll(".sheet");
+    for (var k = 0; k < sheets.length; k++) sheets[k].classList.toggle("follow", follow);
+  }
+
+  /* 지금 읽고 있는 문단을 표시하고, 따라가기가 켜져 있으면 화면 가운데로 옮긴다 */
   function markSegment(time) {
     if (cur < 0) return;
     var segs = lis[cur].querySelectorAll(".seg");
-    var best = -1;
+    if (!segs.length) return;
+
+    var best = 0;
     for (var k = 0; k < segs.length; k++) {
       if (parseFloat(segs[k].dataset.t) <= time + 0.15) best = k;
     }
+    if (best === curSeg) return;
+    curSeg = best;
+
     for (var m = 0; m < segs.length; m++) {
       segs[m].classList.toggle("cur", m === best);
+    }
+    if (follow && !audio.paused) {
+      try {
+        segs[best].scrollIntoView({ behavior: "smooth", block: "center" });
+      } catch (e) {
+        segs[best].scrollIntoView();
+      }
     }
   }
 
@@ -296,7 +336,9 @@
     offBtn.disabled = true;
     offStatus.textContent = "이 환경에서는 오프라인 저장을 쓸 수 없습니다. 온라인 상태로 재생하세요.";
   } else {
-    navigator.serviceWorker.register("sw.js").catch(function () {
+    navigator.serviceWorker.register("sw.js").then(function (reg) {
+      reg.update();   // 갱신본이 있으면 바로 가져온다
+    }).catch(function () {
       offBtn.disabled = true;
       offStatus.textContent = "오프라인 저장을 준비하지 못했습니다.";
     });
@@ -348,6 +390,7 @@
   /* ── 초기화 ── */
   var s = load();
   applyRate(rate);
+  applyFollow();
   paint();
   if (s.id) {
     var idx = TRACKS.findIndex(function (t) { return t.id === s.id; });

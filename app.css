@@ -105,16 +105,37 @@ header .meta { color: var(--dim); font-size: 13px; line-height: 1.6; }
 
 /* 문단을 누르면 그 지점부터 재생된다 */
 .seg {
-  margin: 0 0 14px; padding: 6px 10px 6px 12px;
-  border-left: 2px solid transparent; border-radius: 0 6px 6px 0;
-  cursor: pointer; transition: background 0.15s, border-color 0.15s;
+  margin: 0 0 10px; padding: 9px 12px 9px 14px;
+  border-left: 3px solid transparent; border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, opacity 0.25s, color 0.2s;
 }
-.seg:active { background: rgba(255, 255, 255, 0.06); }
-.seg.cur { background: var(--accent-soft); border-left-color: var(--accent); }
-.sheet .look.seg, .sheet .closing.seg { border-left-width: 3px; }
+.seg:active { background: rgba(255, 255, 255, 0.07); }
+
+/* 재생 중에는 지금 읽는 문단만 밝게, 나머지는 어둡게 죽인다 */
+.sheet.follow .seg { opacity: 0.38; }
+.sheet.follow .seg.cur { opacity: 1; }
+.seg.cur {
+  background: var(--accent-soft);
+  border-left-color: var(--accent);
+  color: #fff;
+}
 .tap-hint {
-  margin: 0 0 14px; font-size: 12px; color: var(--dim);
-  padding-left: 12px;
+  margin: 0 0 12px; font-size: 12px; color: var(--dim); padding-left: 14px;
+}
+
+.followbar {
+  display: flex; align-items: center; gap: 10px;
+  margin: 0 0 14px; padding-left: 14px;
+  font-size: 12px; color: var(--dim);
+}
+.followbar button {
+  font-family: inherit; font-size: 12px; padding: 5px 10px;
+  border-radius: 999px; border: 1px solid var(--line);
+  background: var(--panel2); color: var(--dim); cursor: pointer;
+}
+.followbar button.on {
+  border-color: var(--accent); background: var(--accent-soft); color: var(--accent);
 }
 
 /* ── 플레이어 ─────────────────────────── */
