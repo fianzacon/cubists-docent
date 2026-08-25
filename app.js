@@ -332,58 +332,129 @@
   var offBtn = $("#offbtn");
   var offStatus = $("#offstatus");
 
-  if (!("serviceWorker" in navigator) || location.protocol === "file:") {
+  /* 캐시 저장 자체는 서비스워커 없이 페이지에서도 된다.
+     서비스워커는 "저장한 걸 오프라인에서 꺼내주는" 역할만 한다.
+     그래서 서비스워커 등록 실패로 버튼을 잠그지 않는다. */
+  var secure = location.protocol === "https:" ||
+               location.hostname === "localhost" ||
+               location.hostname === "127.0.0.1";
+
+  if (!window.caches || !secure) {
     offBtn.disabled = true;
-    offStatus.textContent = "이 환경에서는 오프라인 저장을 쓸 수 없습니다. 온라인 상태로 재생하세요.";
+    offStatus.textContent = secure
+      ? "이 브라우저는 오프라인 저장을 지원하지 않습니다."
+      : "오프라인 저장은 https 주소에서만 됩니다. 온라인 상태로 재생하세요.";
   } else {
-    navigator.serviceWorker.register("sw.js").then(function (reg) {
-      reg.update();   // 갱신본이 있으면 바로 가져온다
-    }).catch(function () {
-      offBtn.disabled = true;
-      offStatus.textContent = "오프라인 저장을 준비하지 못했습니다.";
-    });
-    checkCached();
+    offBtn.disabled = false;
     offBtn.addEventListener("click", cacheAll);
+    checkCached();
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").then(function (reg) {
+        // update()가 실패해도 저장 기능과는 무관하므로 삼킨다
+        try { reg.update(); } catch (e) {}
+      }).catch(function (err) {
+        offStatus.textContent =
+          "저장은 되지만 오프라인 재생 준비에 실패했습니다: " + (err && err.message || err);
+      });
+
+      // 새 서비스워커가 넘겨받으면 한 번만 새로고침해 최신 코드로 맞춘다
+      var reloaded = false;
+      navigator.serviceWorker.addEventListener("controllerchange", function () {
+        if (reloaded) return;
+        reloaded = true;
+        location.reload();
+      });
+    } else {
+      offStatus.textContent = "저장은 되지만 이 브라우저는 오프라인 재생을 지원하지 않습니다.";
+    }
   }
 
+  /* 예전 캐시가 남아 화면이 갱신되지 않을 때의 탈출구 */
+  $("#resetbtn").addEventListener("click", function () {
+    var btn = this;
+    btn.disabled = true;
+    btn.textContent = "지우는 중…";
+    var jobs = [];
+    if (window.caches) {
+      jobs.push(caches.keys().then(function (ks) {
+        return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+      }));
+    }
+    if ("serviceWorker" in navigator) {
+      jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) {
+        return Promise.all(rs.map(function (r) { return r.unregister(); }));
+      }));
+    }
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    Promise.all(jobs).catch(function () {}).then(function () {
+      location.replace(location.pathname + "?fresh=" + Date.now());
+    });
+  });
+
+  function audioUrls() {
+    return TRACKS.filter(function (t) { return t.ready; })
+                 .map(function (t) { return t.file; });
+  }
+
+  function markSaved() {
+    offStatus.textContent = "저장 완료. 비행기모드에서도 들을 수 있습니다.";
+    offStatus.className = "status done";
+    offBtn.textContent = "저장됨";
+    offBtn.disabled = true;
+  }
+
+  /* 저장 여부는 오디오 파일이 다 들어있는지로만 판단한다.
+     (코드·데이터는 네트워크 우선이라 캐시에 있든 없든 상관없다.) */
   function checkCached() {
-    if (!window.caches) return;
-    var need = TRACKS.filter(function (t) { return t.ready; }).length;
+    var need = audioUrls();
+    if (!need.length) return;
     caches.open(window.DATA.cacheName).then(function (c) {
-      return c.keys();
-    }).then(function (keys) {
-      if (need && keys.length >= need) {
-        offStatus.textContent = "저장 완료. 비행기모드에서도 들을 수 있습니다.";
-        offStatus.className = "status done";
-        offBtn.textContent = "저장됨";
-        offBtn.disabled = true;
-      }
+      return Promise.all(need.map(function (u) {
+        return c.match(u, { ignoreSearch: true }).then(Boolean);
+      }));
+    }).then(function (hits) {
+      if (hits.every(Boolean)) markSaved();
     }).catch(function () {});
   }
 
   function cacheAll() {
     offBtn.disabled = true;
-    var files = TRACKS.filter(function (t) { return t.ready; })
-      .map(function (t) { return t.file; })
-      .concat(["./", "index.html", "app.css", "app.js", "data.js"]);
-    var n = 0;
     offStatus.className = "status";
+    offStatus.textContent = "저장 준비 중…";
+
+    var files = audioUrls().concat(
+      ["./", "index.html", "app.css", "app.js", "data.js", "version.js"]);
+    var done = 0, failed = [];
+
     caches.open(window.DATA.cacheName).then(function (cache) {
       return files.reduce(function (p, url) {
         return p.then(function () {
-          return cache.add(new Request(url, { cache: "reload" })).catch(function () {});
-        }).then(function () {
-          n++;
-          offStatus.textContent = "저장 중… " + n + " / " + files.length;
+          return cache.add(new Request(url, { cache: "reload" }))
+            .catch(function () { failed.push(url); })
+            .then(function () {
+              done++;
+              offStatus.textContent = "저장 중… " + done + " / " + files.length;
+            });
         });
       }, Promise.resolve());
     }).then(function () {
-      offStatus.textContent = "저장 완료. 비행기모드에서도 들을 수 있습니다.";
-      offStatus.className = "status done";
-      offBtn.textContent = "저장됨";
-    }).catch(function () {
+      var lostAudio = failed.filter(function (u) { return /\.mp3$/.test(u); });
+      if (lostAudio.length) {
+        offBtn.disabled = false;
+        offStatus.className = "status";
+        offStatus.textContent =
+          "오디오 " + lostAudio.length + "개를 못 받았습니다. 다시 눌러주세요.";
+        return;
+      }
+      markSaved();
+    }).catch(function (err) {
       offBtn.disabled = false;
-      offStatus.textContent = "저장에 실패했습니다. 네트워크를 확인하고 다시 눌러보세요.";
+      offStatus.className = "status";
+      offStatus.textContent =
+        "저장 실패: " + (err && err.name === "QuotaExceededError"
+          ? "저장 공간이 부족합니다."
+          : (err && err.message || err));
     });
   }
 

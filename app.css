@@ -65,6 +65,13 @@ header .meta { color: var(--dim); font-size: 13px; line-height: 1.6; }
 .offline .status { font-size: 13px; color: var(--dim); line-height: 1.5; }
 .offline .status.done { color: #6fcf7f; }
 
+.resetline { margin: -14px 0 22px; text-align: right; }
+.resetline button {
+  font-family: inherit; font-size: 12px; color: var(--dim);
+  background: none; border: 0; padding: 4px 2px;
+  text-decoration: underline; cursor: pointer;
+}
+
 /* ── 트랙 목록 ────────────────────────── */
 .tracklist { margin: 0 0 40px; padding: 0; list-style: none; }
 .tracklist li {
