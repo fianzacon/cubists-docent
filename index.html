@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>큐비스트: 시각의 혁신가들 — 도슨트</title>
+<meta name="description" content="퐁피두센터 한화 개관전 《큐비스트: 시각의 혁신가들》 개인 오디오 도슨트">
+<meta name="theme-color" content="#0e0f12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="큐비스트 도슨트">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>큐비스트: 시각의 혁신가들</h1>
+    <div class="meta">
+      The Cubists: Inventing Modern Vision<br>
+      퐁피두센터 한화 · 2026.06.04 – 10.04 · 1, 2 전시실
+    </div>
+  </header>
+
+  <div class="notice">
+    <b>관람 전에 확인하세요</b>
+    <ul>
+      <li>이어폰을 쓰세요. 전시실에서 소리를 내면 곤란합니다.</li>
+      <li><b>아이폰은 측면 무음 스위치를 끄셔야</b> 소리가 납니다.</li>
+      <li>전시장 신호가 약할 수 있습니다. <b>입장 전에 아래 “오프라인 저장”을 눌러</b> 완료 표시를 확인하세요.</li>
+      <li>작품명이 현장 라벨과 다르면, 그 섹션 해설만 들으셔도 됩니다.</li>
+    </ul>
+  </div>
+
+  <div class="offline">
+    <button id="offbtn" type="button">오프라인 저장</button>
+    <div class="status" id="offstatus">전체 음성을 폰에 저장해 둡니다. 와이파이에서 한 번만 누르세요.</div>
+  </div>
+
+  <ul class="tracklist" id="tracklist"></ul>
+</div>
+
+<div class="player" id="player">
+  <div class="wrap">
+    <div class="now" id="now"></div>
+
+    <div class="bar">
+      <span class="t" id="tcur">0:00</span>
+      <input type="range" id="seek" min="0" max="1" step="0.1" value="0" aria-label="재생 위치">
+      <span class="t" id="tdur">0:00</span>
+    </div>
+
+    <div class="ctrls">
+      <button id="prev" type="button" aria-label="이전 트랙">
+        <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6L18 6v12z"/></svg>
+        <span class="lbl">이전</span>
+      </button>
+
+      <button id="back15" type="button" aria-label="15초 뒤로">
+        <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7a6 6 0 1 1-6 6H4a8 8 0 1 0 8-8z"/></svg>
+        <span class="lbl">15초</span>
+      </button>
+
+      <button id="play" class="play" type="button" aria-label="재생 또는 일시정지">
+        <svg viewBox="0 0 24 24"><path id="playicon" d="M8 5v14l11-7z"/></svg>
+      </button>
+
+      <button id="next" type="button" aria-label="다음 트랙">
+        <svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z"/></svg>
+        <span class="lbl">다음</span>
+      </button>
+
+      <div class="rate" id="rate">
+        <button type="button" data-r="0.8">0.8×</button>
+        <button type="button" data-r="1">1.0×</button>
+        <button type="button" data-r="1.25">1.25×</button>
+        <button type="button" data-r="1.5">1.5×</button>
+        <button type="button" data-r="2">2×</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

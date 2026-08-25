@@ -1,0 +1,105 @@
+{
+  "voice": "gemini:Vindemiatrix:pro",
+  "tracks": [
+    {
+      "id": "00",
+      "file": "audio/00.mp3",
+      "duration": 121.7
+    },
+    {
+      "id": "01",
+      "file": "audio/01.mp3",
+      "duration": 81.0
+    },
+    {
+      "id": "02",
+      "file": "audio/02.mp3",
+      "duration": 100.4
+    },
+    {
+      "id": "03",
+      "file": "audio/03.mp3",
+      "duration": 102.8
+    },
+    {
+      "id": "04",
+      "file": "audio/04.mp3",
+      "duration": 101.2
+    },
+    {
+      "id": "05",
+      "file": "audio/05.mp3",
+      "duration": 96.5
+    },
+    {
+      "id": "06",
+      "file": "audio/06.mp3",
+      "duration": 89.8
+    },
+    {
+      "id": "07",
+      "file": "audio/07.mp3",
+      "duration": 91.8
+    },
+    {
+      "id": "08",
+      "file": "audio/08.mp3",
+      "duration": 80.0
+    },
+    {
+      "id": "09",
+      "file": "audio/09.mp3",
+      "duration": 86.6
+    },
+    {
+      "id": "10",
+      "file": "audio/10.mp3",
+      "duration": 81.2
+    },
+    {
+      "id": "11",
+      "file": "audio/11.mp3",
+      "duration": 85.1
+    },
+    {
+      "id": "12",
+      "file": "audio/12.mp3",
+      "duration": 89.2
+    },
+    {
+      "id": "13",
+      "file": "audio/13.mp3",
+      "duration": 94.8
+    },
+    {
+      "id": "14",
+      "file": "audio/14.mp3",
+      "duration": 84.2
+    },
+    {
+      "id": "15",
+      "file": "audio/15.mp3",
+      "duration": 80.3
+    },
+    {
+      "id": "16",
+      "file": "audio/16.mp3",
+      "duration": 66.4
+    },
+    {
+      "id": "17",
+      "file": "audio/17.mp3",
+      "duration": 86.8
+    },
+    {
+      "id": "18",
+      "file": "audio/18.mp3",
+      "duration": 99.7
+    },
+    {
+      "id": "19",
+      "file": "audio/19.mp3",
+      "duration": 88.1
+    }
+  ]
+}

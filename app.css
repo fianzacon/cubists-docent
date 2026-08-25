@@ -1,0 +1,167 @@
+:root {
+  --bg: #0e0f12;
+  --panel: #16181d;
+  --panel2: #1d2027;
+  --line: #2a2e37;
+  --text: #e8e9ec;
+  --dim: #9aa0ab;
+  --accent: #c9a227;
+  --accent-soft: rgba(201, 162, 39, 0.15);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  font-size: 17px;
+  line-height: 1.75;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.wrap { max-width: 720px; margin: 0 auto; padding: 0 18px; }
+
+/* ── 헤더 ─────────────────────────────── */
+header { padding: 28px 0 18px; border-bottom: 1px solid var(--line); }
+header h1 { margin: 0 0 6px; font-size: 22px; line-height: 1.4; letter-spacing: -0.01em; }
+header .meta { color: var(--dim); font-size: 13px; line-height: 1.6; }
+
+/* ── 안내 카드 ────────────────────────── */
+.notice {
+  margin: 18px 0;
+  padding: 14px 16px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--dim);
+}
+.notice b { color: var(--text); font-weight: 600; }
+.notice ul { margin: 8px 0 0; padding-left: 18px; }
+.notice li { margin: 4px 0; }
+
+/* ── 오프라인 저장 ────────────────────── */
+.offline {
+  display: flex; align-items: center; gap: 12px;
+  margin: 14px 0 22px; padding: 14px 16px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+}
+.offline button {
+  flex: 0 0 auto; padding: 10px 16px; border-radius: 8px;
+  border: 1px solid var(--accent); background: var(--accent-soft);
+  color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit;
+}
+.offline button:disabled { opacity: 0.5; cursor: default; }
+.offline .status { font-size: 13px; color: var(--dim); line-height: 1.5; }
+.offline .status.done { color: #6fcf7f; }
+
+/* ── 트랙 목록 ────────────────────────── */
+.tracklist { margin: 0 0 40px; padding: 0; list-style: none; }
+.tracklist li {
+  border-bottom: 1px solid var(--line);
+}
+.trackbtn {
+  display: flex; gap: 12px; align-items: baseline;
+  width: 100%; padding: 15px 4px; text-align: left;
+  background: none; border: 0; color: inherit; cursor: pointer;
+  font-family: inherit; font-size: 16px; line-height: 1.5;
+}
+.trackbtn .num {
+  flex: 0 0 30px; color: var(--dim); font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.trackbtn .tt { flex: 1 1 auto; }
+.trackbtn .tt small { display: block; color: var(--dim); font-size: 12px; margin-top: 3px; }
+.trackbtn .dur { flex: 0 0 auto; color: var(--dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+.tracklist li.playing .trackbtn { color: var(--accent); }
+.tracklist li.done .num::after { content: " ✓"; color: #6fcf7f; }
+.tracklist li.pending .trackbtn { opacity: 0.5; }
+.tracklist li.pending .dur { font-size: 11px; }
+
+/* ── 본문(대본) ───────────────────────── */
+.sheet { display: none; padding: 4px 0 24px; }
+.sheet.open { display: block; }
+.sheet .look {
+  margin: 12px 0 20px; padding: 14px 16px;
+  background: var(--accent-soft); border-radius: 8px;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+}
+.sheet .look b { display: block; color: var(--accent); font-size: 13px; margin-bottom: 6px; }
+.sheet p { margin: 0 0 14px; }
+.sheet .closing {
+  margin-top: 20px; padding: 14px 16px;
+  background: var(--panel2); border-radius: 8px; font-size: 15px;
+}
+.sheet .closing b { display: block; color: var(--dim); font-size: 12px; margin-bottom: 5px; }
+
+/* ── 플레이어 ─────────────────────────── */
+.player {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  background: rgba(22, 24, 29, 0.97);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-top: 1px solid var(--line);
+  padding: 10px 0 calc(10px + var(--safe-b));
+  transform: translateY(110%); transition: transform 0.22s ease;
+}
+.player.on { transform: none; }
+.player .now {
+  font-size: 13px; color: var(--dim); margin-bottom: 8px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.player .now b { color: var(--text); font-weight: 600; }
+
+.bar { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar input[type=range] {
+  flex: 1 1 auto; -webkit-appearance: none; appearance: none;
+  height: 22px; background: none; margin: 0;
+}
+.bar input[type=range]::-webkit-slider-runnable-track {
+  height: 4px; border-radius: 2px; background: var(--line);
+}
+.bar input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+  background: var(--accent); margin-top: -5.5px;
+}
+.bar input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--line); }
+.bar input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border: 0; border-radius: 50%; background: var(--accent); }
+.bar .t { font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+
+.ctrls { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.ctrls button {
+  background: none; border: 0; color: var(--text); cursor: pointer;
+  font-family: inherit; font-size: 13px; padding: 8px 6px; border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 46px;
+}
+.ctrls button:disabled { opacity: 0.3; cursor: default; }
+.ctrls button svg { width: 22px; height: 22px; fill: currentColor; }
+.ctrls .play svg { width: 34px; height: 34px; }
+.ctrls .play { color: var(--accent); }
+.ctrls .lbl { font-size: 10px; color: var(--dim); }
+
+.rate {
+  display: flex; gap: 4px; align-items: center;
+  background: var(--panel2); border-radius: 8px; padding: 3px;
+}
+.rate button {
+  min-width: 0; padding: 5px 8px; font-size: 12px; font-variant-numeric: tabular-nums;
+  border-radius: 6px; color: var(--dim); flex-direction: row;
+}
+.rate button.sel { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+
+body.playing-open { padding-bottom: 158px; }
+
+@media (max-width: 380px) {
+  body { font-size: 16px; }
+  .ctrls button { min-width: 40px; }
+}
